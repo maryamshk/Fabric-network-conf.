@@ -1,0 +1,135 @@
+# Compose file for launching the test setup with
+# a Peer for secureOrderer and a Peer for secOrg
+
+version: '2'
+
+networks:
+  airline:
+
+# Storage outside the containers
+volumes:
+  data-orderer.secureOrderer.com:
+  data-peer1.secureOrderer.com:
+  data-peer1.secOrg.com:
+
+services:
+
+  # Orderer service
+  orderer.secureOrderer.com:
+    container_name: orderer.secureOrderer.com
+    image: hyperledger/fabric-orderer:$IMAGE_TAG
+    command: orderer
+    # Override environment variables for orderer in this section
+    environment:
+      - FABRIC_CFG_PATH=/var/hyperledger/config
+      - FABRIC_LOGGING_SPEC=ERROR
+    # Host folder mappings
+    volumes:
+    # Folder with genesis block
+    - ${PWD}/config/orderer:/var/hyperledger/config
+    # Map the folder with MSP for orderer
+    - ${PWD}/config/crypto-config/ordererOrganizations/secureOrderer.com/orderers/orderer.secureOrderer.com/msp:/var/hyperledger/msp
+    # Added to support the TLS setup
+    - ${PWD}/config/crypto-config/ordererOrganizations/secureOrderer.com/orderers/orderer.secureOrderer.com/tls:/var/hyperledger/tls
+    - data-orderer.secureOrderer.com:/var/ledger
+    ports:
+      - 7050:7050
+    networks:
+      - airline
+
+  # secureOrderer peer1
+  peer1.secureOrderer.com:
+    container_name: peer1.secureOrderer.com
+    image: hyperledger/fabric-peer:$IMAGE_TAG
+    # Override variables in this section
+    environment:
+      - FABRIC_CFG_PATH=/var/hyperledger/config
+      - FABRIC_LOGGING_SPEC=WARNING
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_airline
+    # Start the peer node
+    command: peer node start
+    # Host folder mappings
+    volumes:
+      # Folder with channel create tx file
+      - ${PWD}/config/secureOrderer:/var/hyperledger/config
+      # Map the folder with MSP for Peer
+      - ${PWD}/config/crypto-config/peerOrganizations/secureOrderer.com/peers/peer1.secureOrderer.com/msp:/var/hyperledger/msp
+      # Added to support the TLS setup
+      - ${PWD}/config/crypto-config/peerOrganizations/secureOrderer.com/peers/peer1.secureOrderer.com/tls:/var/hyperledger/tls
+      - /var/run/:/var/run/
+      - data-peer1.secureOrderer.com:/var/hyperledger/production
+    depends_on: 
+      - orderer.secureOrderer.com
+    # Map the ports on Host VM to container ports
+    ports:
+      - 7051:7051
+      - 7052:7052
+    networks:
+      - airline
+
+  # secOrg peer1
+  peer1.secOrg.com:
+    container_name: peer1.secOrg.com
+    image: hyperledger/fabric-peer:$IMAGE_TAG
+    # landing directory
+    working_dir: $HOME
+    # command: peer node start --peer-chaincodedev=true
+    command: peer node start
+    # Environment setup for peer
+    environment:
+      - FABRIC_CFG_PATH=/var/hyperledger/config
+      - FABRIC_LOGGING_SPEC=WARNING
+      - GOPATH=/opt/gopath
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_airline
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.secOrg.com:7051
+    # host file system mappings
+    volumes:
+      # Folder with channel create tx file
+      - ${PWD}/config/secOrg:/var/hyperledger/config
+      # Map the folder with MSP for Peer
+      - ${PWD}/config/crypto-config/peerOrganizations/secOrg.com/peers/peer1.secOrg.com/msp:/var/hyperledger/msp
+      # Added to support the TLS setup
+      - ${PWD}/config/crypto-config/peerOrganizations/secOrg.com/peers/peer1.secOrg.com/tls:/var/hyperledger/tls
+      - /var/run/:/var/run/
+      - data-peer1.secOrg.com:/var/hyperledger/production
+    depends_on: 
+      - orderer.secureOrderer.com
+    # Map the ports on Host VM to container ports
+    ports:
+      - 8051:7051
+      - 8052:7052
+    networks:
+      - airline
+
+  # Tools container used for managing peers
+  tools:
+    container_name: tools
+    command: /bin/bash
+
+    # Tools container image
+    image: hyperledger/fabric-tools:$IMAGE_TAG
+
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - FABRIC_CFG_PATH=/var/hyperledger/config
+      - FABRIC_LOGGING_SPEC=WARNING
+    # This is the working directory on login
+    working_dir: /opt/scripts
+    volumes:
+      # Mapping for the sample chaincode folders
+      - ${PWD}/../artefacts/nodechaincode:/opt/nodechaincode
+      - ${PWD}/../gopath:/opt/gopath
+      # Folder with channel create tx file
+      - ${PWD}/config:/var/hyperledger/config
+      # Map the folder to root of all Fabric CA Client crypto
+      - ${PWD}/config/crypto-config/peerOrganizations:/var/hyperledger/crypto
+      # VM docker stream folder mapping
+      - /var/run/:/host/var/run/
+      # Map the bins folder
+      - ${PWD}/tool-bins:/opt/scripts
+    networks:
+      - airline
+  
+  

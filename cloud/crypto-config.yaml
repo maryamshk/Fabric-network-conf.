@@ -1,0 +1,28 @@
+OrdererOrgs:
+  - Name: SecureOrderer
+    Domain: SecureOrderer.com 
+    #EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+      
+PeerOrgs:
+  - Name: branch1
+    Domain: branch1.com
+    Specs:
+      - Hostname: firstOrg
+        CommonName: firstOrg
+    Users:
+      Count: 2
+
+  - Name: branch2
+    Domain: branch2.com
+    Specs:
+      - Hostname: secOrg
+        CommonName: secOrg
+    Users:
+      Count: 2
+
+
+      
+
+      

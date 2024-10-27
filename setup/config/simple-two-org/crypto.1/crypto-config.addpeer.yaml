@@ -1,0 +1,16 @@
+# Extends the crypto material for the setup
+# Adds a new peer for Org1
+
+#### Peers for secureOrderer
+PeerOrgs:
+  # Peer configuration for secureOrderer
+  - Name: Org1
+    Domain: secureOrderer.com
+    Specs:
+      - Hostname: firstOrg2
+        CommonName: firstOrg2
+        
+
+
+
+      

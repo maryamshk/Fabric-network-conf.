@@ -1,0 +1,155 @@
+
+# policy.3
+# Implicit Meta Policies defined at the Orderer level
+# Readers = ANY Orderer Org Reader
+# Writers = ANY Orderer Org Writers
+# Admins  = MAJORITY Orderer Org Admins  * There is only 1 :)
+
+# ORGANIZATIONS
+Organizations:
+  - &Orderer
+    Name: Orderer
+    ID: OrdererMSP
+    MSPDir: ./crypto-config/ordererOrganizations/secureOrderer.com/msp
+    Policies: &OrdererPolicies
+      Readers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+      Writers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+      Admins:
+          Type: Signature
+          Rule: "OR('OrdererMSP.admin')"
+
+  - &secureOrderer
+    Name: secureOrderer
+    ID: secureOrdererMSP
+    MSPDir: ./crypto-config/peerOrganizations/secureOrderer.com/msp
+    Policies: &secureOrdererPolicies
+      Readers:
+          Type: Signature
+          Rule: "OR('secureOrdererMSP.member')"
+      Writers:
+          Type: Signature
+          Rule: "OR('secureOrdererMSP.member')"
+      Admins:
+          Type: Signature
+          Rule: "OR('secureOrdererMSP.admin')"
+    AnchorPeers:
+      - Host: localhost
+        Port: 7051
+
+  - &secOrg
+    Name: secOrg
+    ID: secOrgMSP
+    MSPDir: ./crypto-config/peerOrganizations/secOrg.com/msp
+    Policies: &secOrgPolicies
+      Readers:
+          Type: Signature
+          Rule: "OR('secOrgMSP.member')"
+      Writers:
+          Type: Signature
+          Rule: "OR('secOrgMSP.member')"
+      Admins:
+          Type: Signature
+          Rule: "OR('secOrgMSP.admin')"
+    AnchorPeers:
+      - Host: localhost
+        Port: 8051
+
+#   ORDERER
+Orderer: &OrdererDefaults
+
+  OrdererType: solo
+
+  Addresses:
+    - localhost:7050
+
+    # Policies for Orderer
+  Policies:
+    Readers:
+        Type: ImplicitMeta
+        Rule: "ANY Readers"
+    Writers:
+        Type: ImplicitMeta
+        Rule: "ANY Writers"
+    Admins:
+        Type: ImplicitMeta  
+        Rule: "MAJORITY Admins"
+
+    # BlockValidation specifies what signatures must be included in the block
+    # from the orderer for the peer to validate it.
+    BlockValidation:
+        Type: ImplicitMeta
+        Rule: "ANY Writers"
+
+  # Batch Timeout: The amount of time to wait before creating a batch
+  BatchTimeout: 2s
+
+  # Batch Size: Controls the number of messages batched into a block
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 98 MB
+    PreferredMaxBytes: 512 KB
+
+
+
+  Capabilities:
+
+#APPLICATION
+Application: &ApplicationDefaults
+ 
+  Organizations:
+
+  Capabilities:
+ 
+
+#   CHANNEL
+Channel: &ChannelDefaults
+
+  Capabilities:
+
+  
+#   PROFILES
+Profiles:
+
+  AirlineOrdererGenesis:
+      <<: *ChannelDefaults
+      Orderer:
+          <<: *OrdererDefaults
+          Organizations:
+              - <<: *Orderer
+
+
+      Application:
+            <<: *ApplicationDefaults
+
+            Organizations:
+                - <<: *secureOrderer
+                - <<: *secOrg
+                 
+
+      Consortiums:
+
+        CTIConsortium:
+            
+            Organizations:
+                  - <<: *secureOrderer
+                  - <<: *secOrg
+                                
+                  
+  AirlineChannel:
+    <<: *ChannelDefaults
+    Consortium: CTIConsortium
+        
+    Application:
+        <<: *ApplicationDefaults
+        
+        Organizations:
+            - <<: *secureOrderer
+            - <<: *secOrg
+        
+
+
+  

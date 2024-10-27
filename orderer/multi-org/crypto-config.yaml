@@ -1,0 +1,30 @@
+OrdererOrgs:
+  - Name: SecureOrderer
+    Domain: secureOrderer.com
+    #EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+      
+PeerOrgs:
+  #### Peers for secureOrderer airline
+  - Name: firstOrg
+    Domain: firstOrg.com
+    #EnableNodeOUs: true
+    Specs:
+      - Hostname: firstOrg
+        CommonName: firstOrg
+    Users:
+      Count: 1
+
+  #### Peers for secOrg airline
+  - Name: secOrg
+    Domain: secOrg.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: firstOrg
+        CommonName: firstOrg
+    Users:
+      Count: 1
+
+
+      
