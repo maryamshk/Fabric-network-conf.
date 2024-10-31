@@ -46,4 +46,4 @@ configtxgen -profile secureOrdererOrdererGenesis -outputBlock ./secureOrderer-ge
 
 #5. Create the secureOrdererchannel transaction
 echo    '================ Writing secureOrdererchannel ================'
-configtxgen -profile secureOrdererChannel -outputCreateChannelTx ./secureOrderer-channel.tx -channelID secureOrdererchannel
+configtxgen -profile secureOrdererChannel -outputCreateChannelTx ./secureOrderer-channel.tx -channelID secureordererchannel
