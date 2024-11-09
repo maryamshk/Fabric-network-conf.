@@ -42,7 +42,7 @@ cryptogen generate --config=./crypto-config.yaml
 
 #4. Setup the genesis block
 echo    '================ Writing genesis ================'
-configtxgen -profile secureOrdererOrdererGenesis -outputBlock ./secureOrderer-genesis.block -channelID ordererchannel
+configtxgen -profile secureOrdererGenesis -outputBlock ./secureOrderer-genesis.block -channelID ordererchannel
 
 #5. Create the secureOrdererchannel transaction
 echo    '================ Writing secureOrdererchannel ================'
